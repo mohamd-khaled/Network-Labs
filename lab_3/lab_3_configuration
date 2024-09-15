@@ -1,0 +1,385 @@
+________________________commands for left-sw0 and righth sw2______________________________
+**********basic configuration
+switch#conf t
+switch(config)#hostname left-sw0 / right-sw0
+left-sw0(config)#line con 0
+left-sw0(config-line)#logging synchronous
+left-sw0(config-line)#no exec-timeout
+left-sw0(config)#line vty 0 15
+left-sw0(config-line)#logging synchronous
+left-sw0(config-line)#no exec-timeout
+left-sw0(config-line)#transport input all
+left-sw0(config-line)#exit
+
+**********change interface to trunk and dot1Q protocol
+left-sw0(config)#int range f0/1-5
+left-sw0(config-if-range)#switchport trunk encapsulation dot1q
+left-sw0(config-if-range)#switchport mode trunk
+left-sw0(config-if-range)#exit
+
+**********enable vtp adding domain/ and made mode as server
+left-sw0(config)#vtp mode server
+left-sw0(config)#vtp domain admin
+
+**********adding vlan and its name 
+     left-sw0                                       right-sw0
+left-sw0(config)#vlan 10                            vlan 10 
+left-sw0(config-vlan)#name IT                       name tech-supp
+left-sw0(config-vlan)#vlan 20                       vlan 20 
+left-sw0(config-vlan)#name sales                    name cust-supp
+
+**********Enable rapit stp            left-sw0/ right-sw0
+left-sw0(config)spanning-tree mode rapid-pvst
+left-sw0(config)spanning-tree vlan 1 root primary
+
+________________________commands for left-sw1 ,left sw2 ,right-sw1 and right sw2______________________________
+**********basic configuration
+switch#conf t
+switch(config)#hostname left-sw1 /right-sw1 /left-sw2 /right-sw2
+left-sw1(config)#line con 0
+left-sw1(config-line)#logging synchronous
+left-sw1(config-line)#no exec-timeout
+left-sw1(config)#line vty 0 15
+left-sw1(config-line)#logging synchronous
+left-sw1(config-line)#no exec-timeout
+left-sw1(config-line)#transport input all
+left-sw1(config-line)#exit
+
+**********change interface to trunk and dot1Q protocol
+left-sw1(config)#int range f0/2-5
+left-sw1(config-if-range)#switchport trunk encapsulation dot1q
+left-sw1(config-if-range)#switchport mode trunk
+left-sw1(config-if-range)#exit
+
+**********change interface to trunk and dot1Q protocol
+left-sw1(config)#int range f0/1
+left-sw1(config-if)#switchport mode access
+left-sw1(config-if)#switchport access vlan 10 / vlan 20
+left-sw1(config-if)#exit
+
+**********enable vtp adding domain/ and made mode as server
+left-sw1(config)#vtp mode client
+
+**********Enable rapit stp         left-sw1/ right-sw1
+left-sw1(config)spanning-tree mode rapid-pvst
+left-sw1(config)spanning-tree vlan 10 root primary
+
+**********Enable rapit stp         left-sw2/ right-sw2
+left-sw1(config)spanning-tree mode rapid-pvst
+left-sw1(config)spanning-tree vlan 20 root primary
+
+left-sw0# sh spanning-tree
+VLAN0001
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    24577
+             Address     00E0.8FAD.C84C
+             This bridge is the root
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    24577  (priority 24576 sys-id-ext 1)
+             Address     00E0.8FAD.C84C
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/1            Desg FWD 19        128.1    P2p
+Fa0/2            Desg FWD 19        128.2    P2p
+Fa0/4            Desg FWD 19        128.4    P2p
+
+left-sw1# sh spanning-tree
+VLAN0010
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    24586
+             Address     0010.1147.57BC
+             This bridge is the root
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    24586  (priority 24576 sys-id-ext 10)
+             Address     0010.1147.57BC
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/1            Desg FWD 19        128.1    P2p
+Fa0/5            Desg FWD 19        128.5    P2p
+Fa0/2            Desg FWD 19        128.2    P2p
+
+left-sw2# sh spanning-tree
+VLAN0020
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    24596
+             Address     00D0.D37C.4463
+             This bridge is the root
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    24596  (priority 24576 sys-id-ext 20)
+             Address     00D0.D37C.4463
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/1            Desg FWD 19        128.1    P2p
+Fa0/5            Desg FWD 19        128.5    P2p
+Fa0/2            Desg FWD 19        128.2    P2p
+
+
+**********Enable etherchannel on right-sw0
+right-sw0(config)#int range f0/2-3
+right-sw0(config-if-rangeig)#channel-group 1 mode active
+right-sw0(config-if-range)#channel-protocol lacp
+
+right-sw0(config)#int range f0/4-5
+right-sw0(config-if-rangeig)#channel-group 2 mode active
+right-sw0(config-if-range)#channel-protocol lacp
+
+
+**********Enable etherchannel on right-sw1
+
+right-sw1(config)#int range f0/2-3
+right-sw1(config-if-rangeig)#channel-group 1 mode passive
+right-sw1(config-if-range)#channel-protocol lacp
+
+right-sw1(config)#int range f0/4-5
+right-sw1(config-if-rangeig)#channel-group 2 mode passive
+right-sw1(config-if-range)#channel-protocol lacp
+
+**********Enable etherchannel on right-sw2
+right-sw2(config)#int range f0/2-3
+right-sw2(config-if-rangeig)#channel-group 1 mode passive
+right-sw2(config-if-range)#channel-protocol lacp
+
+********** trying to make two etherchannel facing together passive
+right-sw2(config)#int range f0/4-5
+right-sw2(config-if-rangeig)#channel-group 2 mode passive
+right-sw2(config-if-range)#channel-protocol lacp
+
+****************show etherchannel summary on right-sw0
+right-sw0#sh etherchannel summary 
+Flags:  D - down        P - in port-channel
+        I - stand-alone s - suspended
+        H - Hot-standby (LACP only)
+        R - Layer3      S - Layer2
+        U - in use      f - failed to allocate aggregator
+        u - unsuitable for bundling
+        w - waiting to be aggregated
+        d - default port
+
+
+Number of channel-groups in use: 2
+Number of aggregators:           2
+
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+----------------------------------------------
+
+1      Po1(SU)           LACP   Fa0/2(P) Fa0/3(P) 
+2      Po2(SU)           LACP   Fa0/4(P) Fa0/5(P) 
+
+****************see etherchannel summary on right-sw1
+right-sw1#sh etherchannel summary 
+Flags:  D - down        P - in port-channel
+        I - stand-alone s - suspended
+        H - Hot-standby (LACP only)
+        R - Layer3      S - Layer2
+        U - in use      f - failed to allocate aggregator
+        u - unsuitable for bundling
+        w - waiting to be aggregated
+        d - default port
+
+
+Number of channel-groups in use: 2
+Number of aggregators:           2
+
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+----------------------------------------------
+
+1      Po1(SU)           LACP   Fa0/2(P) Fa0/3(P) 
+2      Po2(SD)           LACP   Fa0/4(I) Fa0/5(I)  
+
+****************see etherchannel summary on right-sw2
+right-sw1#sh etherchannel summary 
+Flags:  D - down        P - in port-channel
+        I - stand-alone s - suspended
+        H - Hot-standby (LACP only)
+        R - Layer3      S - Layer2
+        U - in use      f - failed to allocate aggregator
+        u - unsuitable for bundling
+        w - waiting to be aggregated
+        d - default port
+
+
+Number of channel-groups in use: 2
+Number of aggregators:           2
+
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+----------------------------------------------
+
+1      Po1(SU)           LACP   Fa0/2(P) Fa0/3(P) 
+2      Po2(SU)           LACP   Fa0/4(I) Fa0/5(I) 
+port2 on right-sw1 and right-sw2 are stand-alone cause they are both passive
+
+when change one of the to active
+
+right-sw1(config)#int range fa0/4-5
+right-sw1(config-if-rangeig)#channel-group 2 mode active
+right-sw1(config-if-range)#channel-protocol lacp
+right-sw1#sh etherchannel summary 
+Flags:  D - down        P - in port-channel
+        I - stand-alone s - suspended
+        H - Hot-standby (LACP only)
+        R - Layer3      S - Layer2
+        U - in use      f - failed to allocate aggregator
+        u - unsuitable for bundling
+        w - waiting to be aggregated
+        d - default port
+
+
+Number of channel-groups in use: 2
+Number of aggregators:           2
+
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+----------------------------------------------
+
+1      Po1(SU)           LACP   Fa0/2(P) Fa0/3(P) 
+2      Po2(SU)           LACP   Fa0/4(P) Fa0/5(P)  
+
+
+
+
+_________________________________commands for router_______________________________
+                                 right router
+**********basic configuration
+Router#conf t
+Router(config)#hostname left-router
+left-router(config)#line con 0
+left-router(config-line)#logging synchronous
+left-router(config-line)#no exec-timeout
+left-router(config)#line vty 0 15
+left-router(config-line)#logging synchronous
+left-router(config-line)#no exec-timeout
+left-router(config-line)#transport input all
+
+**********adding sub-interfaces for vlans
+left-router(config-line)#int f0/0
+left-router(config-if)#no shutdown
+left-router(config-if)#int f0/0.10
+left-router(config-subif)#encapsulation dot1Q 10
+left-router(config-subif)#ip address 172.17.0.1 255.255.255.0
+left-router(config-subif)#int f0/0.20
+left-router(config-subif)#encapsulation dot1Q 20
+left-router(config-subif)#ip address 172.17.1.1 255.255.255.0
+left-router(config-subif)#exit
+
+**********assign ip address to port 1/0
+left-router(config)#int f1/0
+left-router(config-if)#ip address 10.0.0.1
+left-router(config-if)#no shutdown
+
+**********making dhcp for left devices
+left-router(config)#ip dhcp pool IT
+left-router(dhcp-config)#network 172.17.0.0   255.255.255.0
+left-router(dhcp-config)#default-router 172.17.0.1
+left-router(dhcp-config)#dns-server 8.8.8.8
+left-router(dhcp-config)#ip dhcp pool sales
+left-router(dhcp-config)#network 172.17.1.0   255.255.255.0
+left-router(dhcp-config)#default-router 172.17.1.1
+left-router(dhcp-config)##dns-server 8.8.8.8
+
+**********enable rip protocol
+left-router(config)#router rip
+right-router(config-router)#network 172.17.0.0
+right-router(config-router)#network 172.17.1.0
+right-router(config-router)#network 10.0.0.0
+right-router(config-router)#ver 2
+right-router(config-router)#no auto-summary
+
+left-router(config)#do sh ip route
+Codes: C - connected, S - static, I - IGRP, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2, E - EGP
+       i - IS-IS, L1 - IS-IS level-1, L2 - IS-IS level-2, ia - IS-IS inter area
+       * - candidate default, U - per-user static route, o - ODR
+       P - periodic downloaded static route
+
+Gateway of last resort is not set
+
+     10.0.0.0/30 is subnetted, 1 subnets
+C       10.0.0.0 is directly connected, FastEthernet1/0
+     172.17.0.0/24 is subnetted, 2 subnets
+C       172.17.0.0 is directly connected, FastEthernet0/0.10
+C       172.17.1.0 is directly connected, FastEthernet0/0.20
+     192.168.0.0/24 is variably subnetted, 3 subnets, 3 masks
+R       192.168.0.0/24 [120/1] via 10.0.0.2, 00:00:19, FastEthernet1/0
+R       192.168.0.0/25 is possibly down, routing via 10.0.0.2, FastEthernet1/0
+R       192.168.0.128/26 is possibly down, routing via 10.0.0.2, FastEthernet1/0
+
+
+                                 right router
+**********basic configuration
+Router#conf t
+Router(config)#hostname left-router
+right-router(config)#line con 0
+right-router(config-line)#logging synchronous
+right-router(config-line)#no exec-timeout
+right-router(config)#line vty 0 15
+right-router(config-line)#logging synchronous
+right-router(config-line)#no exec-timeout
+right-router(config-line)#transport input all
+
+**********adding sub-interfaces for vlans
+right-router(config-line)#int f0/0
+right-router(config-if)#no shutdown
+right-router(config-if)#exit
+right-router(config)#int f0/0.10
+right-router(config-subif)#encapsulation dot1Q 10
+right-router(config-subif)#ip address 192.168.0.1 255.255.255.128
+right-router(config-subif)#int f0/0.20
+right-router(config-subif)#encapsulation dot1Q 20
+right-router(config-subif)#ip address 192.168.0.129 255.255.255.192
+right-router(config-subif)#exit
+
+**********assign ip address to port 1/0
+right-router(config)#int f1/0
+right-router(config-if)#ip address 10.0.0.2
+right-router(config-if)#no shutdown
+
+**********making dhcp for right devices
+right-router(dhcp-config)#ip dhcp pool tech-supp
+right-router(dhcp-config)#network 192.168.0.0  255.255.255.128
+right-router(dhcp-config)#default-router 192.168.1.1
+right-router(dhcp-config)#dns-server 8.8.8.8
+right-router(dhcp-config)#ip dhcp pool cust-supp
+right-router(dhcp-config)#network 192.168.0.128 255.255.255.192
+right-router(dhcp-config)#default-router 192.168.1.129
+right-router(dhcp-config)##dns-server 8.8.8.8
+
+
+**********enable rip protocol
+right-router(config)#router rip
+right-router(config-router)#network 192.168.0.0
+right-router(config-router)#network 192.168.0.128
+right-router(config-router)#network 10.0.0.0
+right-router(config-router)#ver 2
+right-router(config-router)#no auto-summary
+right-router(config)#do sh ip route
+Codes: C - connected, S - static, I - IGRP, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2, E - EGP
+       i - IS-IS, L1 - IS-IS level-1, L2 - IS-IS level-2, ia - IS-IS inter area
+       * - candidate default, U - per-user static route, o - ODR
+       P - periodic downloaded static route
+
+Gateway of last resort is not set
+
+     10.0.0.0/30 is subnetted, 1 subnets
+C       10.0.0.0 is directly connected, FastEthernet1/0
+     172.17.0.0/24 is subnetted, 2 subnets
+R       172.17.0.0 [120/1] via 10.0.0.1, 00:00:16, FastEthernet1/0
+R       172.17.1.0 [120/1] via 10.0.0.1, 00:00:16, FastEthernet1/0
+     192.168.0.0/24 is variably subnetted, 2 subnets, 2 masks
+C       192.168.0.0/25 is directly connected, FastEthernet0/0.10
+C       192.168.0.128/26 is directly connected, FastEthernet0/0.20
