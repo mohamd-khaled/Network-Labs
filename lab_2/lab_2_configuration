@@ -1,0 +1,239 @@
+commands for SW1/SW2
+**********basic configuration
+switch#conf t
+switch(config)#hostname sw1
+sw1(config)#line con 0
+sw1(config-line)#logging synchronous
+sw1(config-line)#no exec-timeout
+sw1(config)#line vty 0 15
+sw1(config-line)#logging synchronous
+sw1(config-line)#no exec-timeout
+sw1(config-line)#transport input all
+sw1(config-line)#exit
+**********change interface to trunk and dot1Q protocol
+sw1(config)#int range f0/1-3
+sw1(config-if-range)#switchport trunk encapsulation dot1q
+sw1(config-if-range)#switchport mode trunk
+sw1(config-if-range)#do show interfaces trunk
+
+Port        Mode         Encapsulation  Status        Native vlan
+Fa0/1       on           802.1q         trunking      1
+Fa0/2       on           802.1q         trunking      1
+Fa0/3       on           802.1q         trunking      1
+
+Port        Vlans allowed on trunk
+Fa0/1       1-1005
+Fa0/2       1-1005
+Fa0/3       1-1005
+
+Port        Vlans allowed and active in management domain
+Fa0/1       1
+Fa0/2       1
+Fa0/3       1
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Fa0/1       1
+Fa0/2       1
+Fa0/3       1
+
+sw1(config-if-range)#exit
+**********enable vtp adding domain/ and made mode as server
+sw1(config)#do sh vtp status
+VTP Version capable             : 1 to 2
+VTP version running             : 1
+VTP Domain Name                 : 
+VTP Pruning Mode                : Disabled
+VTP Traps Generation            : Disabled
+Device ID                       : 0010.1105.B000
+Configuration last modified by 0.0.0.0 at 3-1-93 00:58:47
+Local updater ID is 0.0.0.0 (no valid interface found)
+
+Feature VLAN : 
+--------------
+VTP Operating Mode                : Server
+Maximum VLANs supported locally   : 1005
+Number of existing VLANs          : 7
+Configuration Revision            : 0
+MD5 digest                        : 0x9F 0x43 0xE9 0x0B 0xFB 0xA3 0xE3 0x11 
+                                    0x2F 0x46 0xBD 0xAA 0x67 0x16 0x0F 0x14 
+sw1(config)#vtp domain admin
+sw1(config)#vtp mode server
+sw1(config)#do sh vtp status
+VTP Version capable             : 1 to 2
+VTP version running             : 1
+VTP Domain Name                 : admin
+VTP Pruning Mode                : Disabled
+VTP Traps Generation            : Disabled
+Device ID                       : 0010.1105.B000
+Configuration last modified by 0.0.0.0 at 3-1-93 00:58:47
+Local updater ID is 0.0.0.0 (no valid interface found)
+
+Feature VLAN : 
+--------------
+VTP Operating Mode                : Server
+Maximum VLANs supported locally   : 1005
+Number of existing VLANs          : 7
+Configuration Revision            : 0
+MD5 digest                        : 0x9F 0x43 0xE9 0x0B 0xFB 0xA3 0xE3 0x11 
+                                    0x2F 0x46 0xBD 0xAA 0x67 0x16 0x0F 0x14 
+
+**********adding vlan and its name
+sw1(config)#vlan 10
+sw1(config-vlan)#name IT
+sw1(config-vlan)#vlan 20
+sw1(config-vlan)#name sales
+sw1(config)#do sh vlan brie
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Gi0/3, Gi1/0, Gi1/1, Gi1/2
+                                                Gi1/3, Gi2/0, Gi2/1, Gi2/2
+                                                Gi2/3, Gi3/0, Gi3/1, Gi3/2
+                                                Gi3/3
+10   IT                               active
+20   sales                            active
+1002 fddi-default                     act/unsup
+1003 token-ring-default               act/unsup
+1004 fddinet-default                  act/unsup
+1005 trnet-default                    act/unsup
+
+*************************************************
+commands for switch1/2/3/4
+
+**********basic configuration
+switch-1#conf t
+switch(config)#line con 0
+switch(config-line)#logging synchronous
+switch(config-line)#no exec-timeout
+switch(config)#line vty 0 15
+switch(config-line)#logging synchronous
+switch(config-line)#no exec-timeout
+switch(config-line)#transport input all
+switch(config-line)#exit
+
+********** made vtp mode as client
+switch(config)#vtp mode client
+switch(config)#do sh vtp status
+VTP Version                     : 1
+Configuration Revision          : 0
+Maximum VLANs supported locally : 255
+Number of existing VLANs        : 7
+VTP Operating Mode              : Client
+VTP Domain Name                 : admin
+VTP Pruning Mode                : Disabled
+VTP V2 Mode                     : Disabled
+VTP Traps Generation            : Disabled
+MD5 digest                      : 0x9F 0x43 0xE9 0x0B 0xFB 0xA3 0xE3 0x11 
+Configuration last modified by 0.0.0.0 at 3-1-93 00:58:47
+
+**********change interface to trunk 
+Switch(config)#int f0/1
+Switch(config-if)#no shutdown 
+Switch(config-if)#switchport mode trunk 
+
+*********select the vlan for interfaces
+switch(config)#int range f1/1 ,f2/1
+switch(config-if)#switchport mode access
+switch(config-if)#switchport access vlan 10
+switch(config-if)exit
+switch(config)#do sh vlan brie
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa3/1, Fa4/1, Fa5/1
+10   IT                               active    Fa1/1, Fa2/1
+20   SALES                            active    
+1002 fddi-default                     active    
+1003 token-ring-default               active    
+1004 fddinet-default                  active    
+1005 trnet-default                    active  
+
+*************for switch2
+switch(config)#int range f1/1 ,f2/1 ,f3/1
+switch(config-if)#switchport mode access
+switch(config-if)#switchport access vlan 10
+switch(config-if)exit
+switch(config)#do sh vlan brie
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa4/1, Fa5/1
+10   IT                               active    
+20   SALES                            active    Fa1/1, Fa2/1, Fa3/1
+1002 fddi-default                     active    
+1003 token-ring-default               active    
+1004 fddinet-default                  active    
+1005 trnet-default                    active  
+
+
+*************************************************
+commands for router
+**********basic configuration
+Router#conf t
+Router(config)#hostname R1
+R1(config)#line con 0
+R1(config-line)#logging synchronous
+R1(config-line)#no exec-timeout
+R1(config)#line vty 0 15
+R1(config-line)#logging synchronous
+R1(config-line)#no exec-timeout
+R1(config-line)#transport input all
+
+**********adding sub-interfaces for vlans in left
+R1(config-line)#int f0/0
+R1(config-if)#no shutdown
+R1(config-if)#exit
+R1(config)#int f0/0.10
+R1(config-subif)#encapsulation dot1Q 10
+R1(config-subif)#ip address 192.168.0.1 255.255.255.128
+R1(config-subif)#int f0/0.20
+R1(config-subif)#encapsulation dot1Q 20
+R1(config-subif)#ip address 192.168.0.129 255.255.255.128
+R1(config-subif)#exit
+
+**********adding sub-interfaces for vlans in left
+R1(config)#int f1/0
+R1(config-if)#no shutdown
+R1(config-if)#exit
+R1(config)#int f1/0.10
+R1(config-subif)#encapsulation dot1Q 10
+R1(config-subif)#ip address 192.168.1.1 255.255.255.128
+R1(config-subif)#int f1/0.20
+R1(config-subif)#encapsulation dot1Q 20
+R1(config-subif)#ip address 192.168.1.129 255.255.255.128
+R1(config-subif)#exit
+
+R1(config)#do sh ip int brie
+Interface              IP-Address      OK? Method Status                Protocol 
+FastEthernet0/0        unassigned      YES unset  up                    up 
+FastEthernet0/0.10     192.168.0.1     YES manual up                    up 
+FastEthernet0/0.20     192.168.0.129   YES manual up                    up 
+FastEthernet1/0        unassigned      YES unset  up                    up 
+FastEthernet1/0.10     192.168.1.1     YES manual up                    up 
+FastEthernet1/0.20     192.168.1.129   YES manual up                    up 
+Serial2/0              unassigned      YES unset  administratively down down 
+Serial3/0              unassigned      YES unset  administratively down down 
+FastEthernet4/0        unassigned      YES unset  administratively down down 
+FastEthernet5/0        unassigned      YES unset  administratively down down
+
+**********making dhcp for left and right devices
+R1(config)#ip dhcp pool LEFT-IT
+R1(dhcp-config)#network 192.168.0.0 /25
+R1(dhcp-config)#default-router 192.168.0.1
+R1(dhcp-config)#dns-server 8.8.8.8
+R1(dhcp-config)#ip dhcp pool LEFT-sales
+R1(dhcp-config)#network 192.168.0.128 /25
+R1(dhcp-config)#default-router 192.168.0.129
+R1(dhcp-config)##dns-server 8.8.8.8
+
+R1(dhcp-config)#ip dhcp pool RIGHT-IT
+R1(dhcp-config)#network 192.168.1.0 /25
+R1(dhcp-config)#default-router 192.168.1.1
+R1(dhcp-config)#dns-server 8.8.8.8
+R1(dhcp-config)#ip dhcp pool RIGHT-sales
+R1(dhcp-config)#network 192.168.1.128 /25
+R1(dhcp-config)#default-router 192.168.1.129
+R1(dhcp-config)##dns-server 8.8.8.8
+
+R1(config)#ip dhcp excluded-address 192.168.0.0 192.168.0.10
+R1(config)#ip dhcp excluded-address 192.168.0.128 192.168.0.138
+R1(config)#ip dhcp excluded-address 192.168.1.0 192.168.1.10
+R1(config)#ip dhcp excluded-address 192.168.1.128 192.168.1.138
