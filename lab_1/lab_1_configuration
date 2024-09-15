@@ -1,0 +1,215 @@
+
+commands for "sw1 & sw2"
+**********basic configuration
+switch-1#conf t
+switch-1(config)#hostname sw1 / sw2
+sw1(config)#enable secret ciscosw 
+sw1(config)#username admin secret ciscosw
+sw1(config)#service password-encryption
+sw1(config)#banner modt^
+******************************************
+UNATHOURIZED ACCESS IS BROHIBITED
+******************************************
+sw1(config)#line con 0
+sw1(config-line)#pass ciscosw
+sw1(config-line)#login
+sw1(config-line)#login local
+sw1(config-line)#logging synchronous
+sw1(config-line)#no exec-timeout
+sw1(config)#line vty 0 1500
+sw1(config-line)#pass ciscosw
+sw1(config-line)#login
+sw1(config-line)#login local
+sw1(config-line)#logging synchronous
+sw1(config-line)#no exec-timeout
+sw1(config-line)#transport input all
+
+sw1(config-line)#int vlan 1
+sw1(config-if)#ip address 192.168.1.2 255.255.255.0 /first switch  192.168.2.2 255.255.255.0 /second switch 
+sw1(config-if)#no shu
+sw1(config-if)#exit
+sw1(config)#ip default-gateway 192.168.1.1 /first switch  192.168.2.1 /second switch 
+
+**********enable ssh in sw1 & sw2
+sw1(config)#ip domain-name admin
+sw1(config)#username admin secret ciscosw
+sw1(config)#crypto key generate rsa modulus 2024
+sw1(config)#ip ssh version 2
+sw1(config)#line vty 0 1500
+sw1(config-line)#login local
+sw1(config-line)#transport input ssh
+sw1(config-if)#exit
+
+*****************port security
+trunk mode between (Sw1 & pc1)
+sw1(config)#int g0/1
+sw1(config-if)#switchport mode trunk
+sw1(config-if)#switchport port-security
+sw1(config-if)#switchport port-security maximum 1
+sw1(config-if)#switchport port-security mac-address sticky
+sw1(config-if)#switchport port-security violation shutdown
+sw1(config-if)#exit
+
+pc1 made dhcp request
+
+sw1(config)#do sh port-security int g0/1
+Port Security              : Enabled
+Port Status                : Secure-up
+Violation Mode             : Restrict
+Aging Time                 : 0 mins
+Aging Type                 : Absolute
+SecureStatic Address Aging : Disabled
+Maximum MAC Addresses      : 1
+Total MAC Addresses        : 1
+Configured MAC Addresses   : 1
+Sticky MAC Addresses       : 0
+Last Source Address:Vlan   : 0050.7966.6800:1
+Security Violation Count   : 0
+
+disconect pc1 and connect to pc4
+sw1(config)#
+*Aug 24 19:51:20.954: %PM-4-ERR_DISABLE: psecure-violation error detected on Gi0/1, putting Gi0/1 in err-disable state
+sw1(config)#
+*Aug 24 19:51:20.957: %PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address 0050.7966.6803 on port GigabitEthernet0/1.
+sw1(config)#
+*Aug 24 19:51:21.956: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to down
+*Aug 24 19:51:22.957: %LINK-3-UPDOWN: Interface GigabitEthernet0/1, changed state to down
+sw1(config)#do sh port-security int g0/1
+Port Security              : Enabled
+Port Status                : Secure-shutdown
+Violation Mode             : Shutdown
+Aging Time                 : 0 mins
+Aging Type                 : Absolute
+SecureStatic Address Aging : Disabled
+Maximum MAC Addresses      : 1
+Total MAC Addresses        : 1
+Configured MAC Addresses   : 1
+Sticky MAC Addresses       : 0
+Last Source Address:Vlan   : 0050.7966.6803:1
+Security Violation Count   : 1
+
+trunk mode between (Sw2 & Switch1 (pc2 & pc3))
+sw2(config)#int g0/1
+sw2(config-if)#switchport mode trunk
+sw2(config-if)#switchport port-security
+sw2(config-if)#switchport port-security maximum 2
+sw2(config-if)#switchport port-security mac-address sticky
+sw2(config-if)#switchport port-security violation restrict
+sw2(config-if)#exit
+
+pc2 made dhcp request
+
+sw2(config)#do sh port-security int g0/1
+Port Security              : Enabled
+Port Status                : Secure-up
+Violation Mode             : Restrict
+Aging Time                 : 0 mins
+Aging Type                 : Absolute
+SecureStatic Address Aging : Disabled
+Maximum MAC Addresses      : 2
+Total MAC Addresses        : 2
+Configured MAC Addresses   : 0
+Sticky MAC Addresses       : 2
+Last Source Address:Vlan   : 0050.7966.6801:1
+Security Violation Count   : 0
+
+pc3 made dhcp request
+
+sw2(config)#do sh port-security int g0/1
+Port Security              : Enabled
+Port Status                : Secure-up
+Violation Mode             : Restrict
+Aging Time                 : 0 mins
+Aging Type                 : Absolute
+SecureStatic Address Aging : Disabled
+Maximum MAC Addresses      : 2
+Total MAC Addresses        : 2
+Configured MAC Addresses   : 0
+Sticky MAC Addresses       : 2
+Last Source Address:Vlan   : 0050.7966.6802:1
+Security Violation Count   : 0
+
+disconect pc1 and connect to pc4
+sw2(config)#
+*Aug 24 19:59:12.434: %PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address 0050.7966.6803 on port GigabitEthernet0/1.
+sw2#sh port-security int g0/1
+Port Security              : Enabled
+Port Status                : Secure-up
+Violation Mode             : Restrict
+Aging Time                 : 0 mins
+Aging Type                 : Absolute
+SecureStatic Address Aging : Disabled
+Maximum MAC Addresses      : 2
+Total MAC Addresses        : 2
+Configured MAC Addresses   : 0
+Sticky MAC Addresses       : 2
+Last Source Address:Vlan   : 0050.7966.6803:1
+Security Violation Count   : 1
+
+pc4 made dhcp request
+sw2(config)#
+*Aug 24 19:59:12.434: %PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address 0050.7966.6803 on port GigabitEthernet0/1.
+sw2#sh port-security int g0/1
+Port Security              : Enabled
+Port Status                : Secure-up
+Violation Mode             : Restrict
+Aging Time                 : 0 mins
+Aging Type                 : Absolute
+SecureStatic Address Aging : Disabled
+Maximum MAC Addresses      : 2
+Total MAC Addresses        : 2
+Configured MAC Addresses   : 0
+Sticky MAC Addresses       : 2
+Last Source Address:Vlan   : 0050.7966.6803:1
+Security Violation Count   : 4
+
+***************************************************
+commands for "r1"
+R-1#conf t
+R-1(config)#hostname r1
+r1(config)#enable secret ciscor
+r1(config)#username admin secret ciscosr
+r1(config)#service password-encryption
+r1(config)#banner modt^
+******************************************
+UNATHOURIZED ACCESS IS BROHIBITED
+******************************************
+r1(config)#line con 0
+r1(config-line)#pass ciscor
+r1(config-line)#login
+r1(config-line)#login local
+r1(config-line)#logging synchronous
+r1(config-line)#no exec-timeout
+r1(config)#line vty 0 942
+r1(config-line)#pass ciscor
+r1(config-line)#login
+r1(config-line)#login local
+r1(config-line)#logging synchronous
+r1(config-line)#no exec-timeout
+
+r1(config-line)#int g0/0
+r1(config-if)#ip address 192.168.1.1 255.255.255.0
+r1(config-if)#no shu
+
+r1(config-line)#int g0/1
+r1(config-if)#ip address 192.168.2.1 255.255.255.0
+r1(config-if)#no shu
+r1(config-if)#exit
+
+**********enable DHCP
+r1(config)#ip dhcp pool LEFT-LAN
+r1(dhcp-config)#network 192.168.1.0 255.255.255.0
+r1(dhcp-config)#default-router 192.168.1.1
+r1(dhcp-config)#dns-server 8.8.8.8 8.4.4.4
+r1(dhcp-config)#exit
+r1(config)#ip dhcp pool RIGHT-LAN
+r1(dhcp-config)#network 192.168.2.0 255.255.255.0
+r1(dhcp-config)#default-router 192.168.2.1
+r1(dhcp-config)#dns-server 8.8.8.8 8.4.4.4
+r1(dhcp-config)#exit
+
+**********exclude some ips from DHCP pool
+r1(config)#ip dhcp excluded-address 192.168.1.1 192.168.1.32
+r1(config)#ip dhcp excluded-address 192.168.2.1 192.168.2.32
+
+
