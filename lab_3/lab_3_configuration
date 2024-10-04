@@ -317,7 +317,7 @@ R       192.168.0.0/25 is possibly down, routing via 10.0.0.2, FastEthernet1/0
 R       192.168.0.128/26 is possibly down, routing via 10.0.0.2, FastEthernet1/0
 
 
-                                 right router
+                                 left router
 **********basic configuration
 Router#conf t
 Router(config)#hostname left-router
