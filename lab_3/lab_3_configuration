@@ -274,7 +274,7 @@ left-router(config-subif)#exit
 
 **********assign ip address to port 1/0
 left-router(config)#int f1/0
-left-router(config-if)#ip address 10.0.0.1
+left-router(config-if)#ip address 10.0.0.1  255.255.255.252
 left-router(config-if)#no shutdown
 
 **********making dhcp for left devices
@@ -343,7 +343,7 @@ right-router(config-subif)#exit
 
 **********assign ip address to port 1/0
 right-router(config)#int f1/0
-right-router(config-if)#ip address 10.0.0.2
+right-router(config-if)#ip address 10.0.0.2 255.255.255.252
 right-router(config-if)#no shutdown
 
 **********making dhcp for right devices
