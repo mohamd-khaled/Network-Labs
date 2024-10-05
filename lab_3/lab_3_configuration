@@ -349,11 +349,11 @@ right-router(config-if)#no shutdown
 **********making dhcp for right devices
 right-router(dhcp-config)#ip dhcp pool tech-supp
 right-router(dhcp-config)#network 192.168.0.0  255.255.255.128
-right-router(dhcp-config)#default-router 192.168.1.1
+right-router(dhcp-config)#default-router 192.168.0.1
 right-router(dhcp-config)#dns-server 8.8.8.8
 right-router(dhcp-config)#ip dhcp pool cust-supp
 right-router(dhcp-config)#network 192.168.0.128 255.255.255.192
-right-router(dhcp-config)#default-router 192.168.1.129
+right-router(dhcp-config)#default-router 192.168.0.129
 right-router(dhcp-config)##dns-server 8.8.8.8
 
 
