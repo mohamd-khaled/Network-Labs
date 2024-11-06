@@ -1,0 +1,145 @@
+_______________________________________________________________Router 1_______________________________________________________________
+Router (config)# Hostname R1
+R1 (config)# lin con 0
+R1 (config-line)# logging synchronous
+R1 (config-line)# no exec-timeout
+R1 (config-line)# int gi0/0
+R1 (config -if)# no sh
+R1 (config -if)#ip address 192.168.0.1 255.255.255.0
+R1(config -if)# ip helper-address 10.0.0.1 (DHCP relay agent)
+R1 (config-if)# int gi0/1
+R1 (config -if)# no sh
+R1 (config -if)#ip address 192.168.1.1 255.255.255.252
+R1 (config- if)# exit
+R1(config)#ro ospf 1
+R1(config-router)#router-id 1.1.1.1
+R1(config-router)#network 192.168.0.0 0.0.0.255 a 0
+R1(config-router)#network 192.168.1.0 0.0.0.3 a 0
+R1(config-router)#exit
+								HSRP
+R1(config)# int gi0/0
+R1 (config -if)#standby version 2
+R1 (config -if)#standby 1 ip 192.168.0.244
+R1 (config -if)#standby 1 priority 200
+R1 (config -if)#preempt
+R1 (config -if)#exit
+R1 (config)#exit
+								CDP/LLDP
+R1# sh cdp
+R1# sh cdp interface
+R1#sh cdp neighbors detail
+
+_______________________________________________________________Router 2_______________________________________________________________
+Router (config)# Hostname R2
+R2 (config)# lin con 0
+R2 (config-line)# logging synchronous
+R2 (config-line)# no exec-timeout
+R2 (config-line)# int gi0/0
+R2 (config -if)# no sh
+R2 (config -if)#ip address 192.168.0.2 255.255.255.0
+R2 (config -if)# no sh
+R2(config -if)# ip helper-address 10.0.0.1 (DHCP relay agent)
+R2 (config-if)# int gi0/1
+R2 (config -if)# no sh
+R2 (config -if)#ip address 192.168.2.1 255.255.255.252
+R2 (config- if)# exit
+R2(config)#ro ospf 1
+R2(config-router)#router-id 2.2.2.2
+R2(config-router)#network 192.168.0.0 0.0.0.255 a 0
+R2(config-router)#network 192.168.2.0 0.0.0.3 a 0
+R2(config-router)#exit
+							HSRP
+R2(config)# int gi0/0
+R2 (config -if)#standby version 2
+R2 (config -if)#standby 1 ip 192.168.0.244
+R2 (config -if)#standby 1 priority 50
+R2 (config -if)#exit
+R2 (config)#exit
+							CDP
+R2# sh cdp
+R2# sh cdp interface
+R2#sh cdp neighbors detail
+							to enable LLDP
+R2(config)#lldp run
+R2(config)#interface range gi0/0, gi0/1
+R2(config-if-range)# lldp transmit
+R2(config-if-range)# lldp receive
+R2(config-if-range)# lldp timer (in sec)
+R2(config-if-range)# lldp holdtime (in sec)
+R2(config-if-range)# lldp reint (in sec)
+R2#sh lldp
+R2#sh cdp interface
+R2#sh cdp neighbors detail
+
+_______________________________________________________________Router 3_______________________________________________________________
+Router (config)# Hostname R3
+R3 (config)# lin con 0
+R3 (config-line)# logging synchronous
+R3 (config-line)# no exec-timeout
+R3 (config-line)# int fi0/0
+R3 (config -if)# no sh
+R3 (config -if)#ip address 192.168.1.2 255.255.255.0
+R3(config -if)# ip helper-address 10.0.0.1 (DHCP relay agent)
+R3 (config -if)#ip nat inside (NAT)
+R3 (config-if)# int fi0/1
+R3 (config -if)# no sh
+R3 (config -if)#ip address 192.168.2.2 255.255.255.252
+R3(config -if)# ip helper-address 10.0.0.1 (DHCP relay agent)
+R3 (config -if)#ip nat inside (NAT)
+R3 (config-if)# int fi0/6
+R3 (config -if)# no sh
+R3 (config -if)#ip address 10.0.0.5 255.255.255.252
+R3 (config -if)#ip nat outside (NAT)
+R3 (config -if)#service-policy output R3_OUT (QOS)
+R3 (config-if)# int fi0/7
+R3 (config -if)# no sh
+R3 (config -if)#ip address 10.0.0.2 255.255.255.252
+R3 (config- if)# exit
+R3(config)#ro ospf 1
+R3(config-router)#router-id 3.3.3.3
+R3(config-router)#network 192.168.1.0 0.0.0.255 a 0
+R3(config-router)#network 192.168.2.0 0.0.0.3 a 0
+R3(config-router)#network 10.0.0.0 0.0.0.255 a 0
+R3(config-router)#network 10.0.0.4 0.0.0.3 a 0
+R3(config-router)#exit
+								Dynamic NAT
+R3(config)# access-list 1 permit 192.168.0.0 0.0.0.255
+R3 (config)#ip nat pool POOL1 100.0.0.1 100.0.0.3 netmask 255.255.255.0
+R3 (config)#ip nat inside source list 1 pool POOL1
+								QOS
+R3(config)# class-map HTTPS_MAP
+R3(config-cmap)# match protocol https
+R3(config)# policy-map R3_OUT
+R3(config-pmap)# class HTTPS_MAP
+R3(config-pmap-c)# set ip dscp af31
+R3(config-pmap-c)# priority percent 50
+R3(config)# class-map ICMP_MAP
+R3(config-cmap)# match protocol icmp
+R3(config)# policy-map R3_OUT
+R3(config-pmap)# class ICMP_MAPR3(config-pmap-c)# set ip dscp af21
+R3(config-pmap-c)# bandwidth percent 10
+DNS
+ip name-server 1.1.1.1
+
+_______________________________________________________________INTERNET_______________________________________________________________
+Router (config)# Hostname INTERNET
+INTERNET (config)# lin con 0
+INTERNET (config-line)# logging synchronous
+INTERNET (config-line)# no exec-timeout
+INTERNET (config-line)# int gi0/0
+INTERNET (config -if)# no sh
+INTERNET (config -if)#ip address 10.0.0.6 255.255.255.252
+INTERNET (config-if)# int gi0/1
+INTERNET (config -if)# no sh
+INTERNET (config -if)#ip address 1.1.1.2 255.255.255.252
+INTERNET (config-if)# int gi0/2
+INTERNET (config -if)# no sh
+RINTERNET3 (config -if)#ip address 172.217.6.1 255.255.255.0
+INTERNET (config- if)# exit
+INTERNET(config)#ro ospf 1
+INTERNET(config-router)#router-id 4.4.4.4
+INTERNET(config-router)#network 10.0.0.4 0.0.0.3 a 0
+INTERNET(config-router)#network 1.1.1.0 0.0.0.3 a 0
+INTERNET(config-router)#network 172.217.6.0 0.0.0.255 a 0
+R3INTERNETconfig-router)#exit
+INTERNET (config)# ip route 100.0.0.0 255.255.255.0 10.0.0.5
