@@ -1,0 +1,995 @@
+_______________________________________________layer 3 sw1_______________________________________________
+enable
+conf t
+hostname HQ_sw1
+enable secret cisco
+
+service password-encryption
+banner motd ^
+******************************************
+UNATHOURIZED ACCESS IS BROHIBITED
+******************************************
+^
+
+line con 0
+pass cisco
+login local
+logging synchro
+no exec-timeout 
+exit
+
+ip domain-name admin.com
+username admin secret cisco
+crypto key generate rsa general-keys modulus 2024
+ip ssh version 2
+
+line vty 0 15
+login local
+logging synchro
+no exec-timeout 
+transport input ssh
+exit
+
+vlan 10
+name first_floor
+vlan 20
+name second_floor
+vlan 30
+name third_floor
+vlan 40
+name voice_vlan
+exit
+
+int vlan 10
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.0.1 255.255.255.192
+exit
+
+int vlan 20
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.0.65 255.255.255.192
+exit
+
+int vlan 30
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.0.129 255.255.255.192
+exit
+
+int vlan 40
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.0.193 255.255.255.192
+exit
+
+spanning-tree mode rapid-pvst 
+spanning-tree vlan 10 root primary 
+spanning-tree vlan 20 root primary 
+spanning-tree vlan 30 root primary 
+spanning-tree vlan 40 root primary 
+
+int r fa0/4-6
+channel-group 1 mode active
+channel-protocol lacp
+
+int fa0/7
+no switchport
+ip address 192.168.3.2 255.255.255.252
+
+ip routing
+router ospf 1
+router-id 2.2.2.2
+network 192.168.0.0 0.0.0.63 a 0
+network 192.168.0.64 0.0.0.63 a 0
+network 192.168.0.128 0.0.0.63 a 0
+network 192.168.0.192 0.0.0.63 a 0
+network 192.168.3.0 0.0.0.3 a 0
+passive-interface fa0/1
+passive-interface fa0/2
+passive-interface fa0/3
+exit
+
+int fa0/7
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 cisco
+exit
+
+logging host 192.168.4.3
+logging trap debugging
+service timestamps log datetime msec 
+
+ntp server 192.168.3.1
+
+_______________________________________________layer 3 sw2_______________________________________________
+enable
+conf t
+hostname HQ_sw2
+enable secret cisco
+
+service password-encryption
+banner motd ^
+******************************************
+UNATHOURIZED ACCESS IS BROHIBITED
+******************************************
+^
+line con 0
+pass cisco
+login local
+logging synchro
+no exec-timeout 
+exit
+
+ip domain-name admin.com
+username admin secret cisco
+crypto key generate rsa general-keys modulus 2024
+ip ssh version 2
+
+line vty 0 15
+login local
+logging synchro
+no exec-timeout 
+transport input ssh
+exit
+
+vlan 10
+name first_floor
+vlan 20
+name second_floor
+vlan 30
+name third_floor
+vlan 40
+name voice_vlan
+exit
+
+int vlan 10
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.0.1 255.255.255.192
+exit
+
+int vlan 20
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.0.65 255.255.255.192
+exit
+
+int vlan 30
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.0.129 255.255.255.192
+exit
+
+int vlan 40
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.0.193 255.255.255.192
+exit
+
+spanning-tree mode rapid-pvst 
+
+int r fa0/4-6
+channel-group 1 mode passive
+channel-protocol lacp
+
+int fa0/7
+no switchport
+ip address 192.168.3.6 255.255.255.252
+
+ip routing
+router ospf 1
+router-id 1.1.1.1
+network 192.168.0.0 0.0.0.63 a 0
+network 192.168.0.64 0.0.0.63 a 0
+network 192.168.0.128 0.0.0.63 a 0
+network 192.168.0.192 0.0.0.63 a 0
+network 192.168.3.4 0.0.0.3 a 0
+passive-interface fa0/1
+passive-interface fa0/2
+passive-interface fa0/3
+exit
+
+int fa0/7
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 cisco
+exit
+
+logging host 192.168.4.3
+logging trap debugging
+service timestamps log datetime msec 
+
+ntp server 192.168.3.5
+
+_______________________________________________layer 3 sw3_______________________________________________
+enable
+conf t
+hostname HQ_sw3
+
+line con 0
+logging synchro
+no exec-timeout 
+exit
+
+line vty 0 15
+logging synchro
+no exec-timeout 
+exit
+
+vlan 10
+name first_floor
+vlan 40
+name voice_vlan
+exit
+
+int r fa0/4-5
+switchport trunk encapsulation dot1q 
+switchport mode trunk
+
+int fa0/1
+switchport mode access
+switchport access vlan 10
+switchport voice vlan 40
+int r fa0/2-3
+switchport mode access
+switchport access vlan 10
+
+int fa0/1
+switchport port-security 
+switchport port-security mac-address sticky 
+switchport port-security maximum 2
+switchport port-security violation restrict 
+exit
+
+int r fa0/2-3
+switchport port-security 
+switchport port-security mac-address sticky 
+switchport port-security maximum 1
+switchport port-security violation restrict 
+exit
+
+ip dhcp snooping 
+ip dhcp snooping vlan 10
+ip dhcp snooping vlan 30
+ip arp inspection vlan 10
+ip arp inspection vlan 30
+ip arp inspection validate scr-mac ip dst-mac
+int r fa0/4-5
+ip dhcp snooping trust
+ip arp inspection trust
+exit
+int r fa0/1-3
+ip dhcp snooping limit rate 3
+exit
+no ip dhcp snooping information option
+
+
+logging host 192.168.4.3
+logging trap debugging
+service timestamps log datetime msec
+
+int r fa0/1-3
+spanning-tree portfast
+spanning-tree bpduguard enable
+
+
+_______________________________________________layer 2 sw1_______________________________________________
+enable
+conf t
+hostname HQ_l2sw1
+
+line con 0
+logging synchro
+no exec-timeout 
+exit
+
+line vty 0 15
+logging synchro
+no exec-timeout 
+exit
+
+vlan 20
+name second_floor
+exit
+
+int r fa3/1, fa6/1
+switchport mode trunk
+exit
+
+int r fa0/1, fa1/1, fa2/1
+switchport mode access
+switchport access vlan 20
+exit
+
+int r fa0/1, fa1/1, fa2/1
+switchport port-security 
+switchport port-security mac-address sticky 
+switchport port-security maximum 1
+switchport port-security violation restrict 
+exit
+
+ip dhcp snooping 
+ip dhcp snooping vlan 20
+ip arp inspection vlan 20
+ip arp inspection validate src-mac ip dst-mac
+int r fa3/1 ,fa6/1
+ip dhcp snooping trust
+ip arp inspection trust
+exit
+int r fa0/1, fa1/1, fa2/1
+ip dhcp snooping limit rate 3
+exit
+no ip dhcp snooping information option
+
+logging host 192.168.4.3
+logging trap debugging
+service timestamps log datetime msec 
+
+int r fa0/1, fa1/1, fa2/1
+spanning-tree portfast
+spanning-tree bpduguard enable
+
+_______________________________________________layer 2 sw2_______________________________________________
+enable
+conf t
+hostname HQ_l2sw2
+
+line con 0
+logging synchro
+no exec-timeout 
+exit
+
+line vty 0 15
+logging synchro
+no exec-timeout 
+exit
+
+vlan 30
+name third_floor
+exit
+
+int r fa3/1, fa8/1
+switchport mode trunk
+exit
+
+int r fa0/1, fa1/1, fa2/1
+switchport mode access
+switchport access vlan 30
+exit
+
+int r fa0/1, fa1/1, fa2/1
+switchport port-security 
+switchport port-security mac-address sticky 
+switchport port-security maximum 1
+switchport port-security violation restrict 
+exit
+
+ip dhcp snooping 
+ip dhcp snooping vlan 30
+ip arp inspection vlan 30
+ip arp inspection validate src-mac ip dst-mac
+int r fa3/1 ,fa8/1
+ip dhcp snooping trust
+ip arp inspection trust
+exit
+int r fa0/1, fa1/1, fa2/1
+ip dhcp snooping limit rate 3
+exit
+no ip dhcp snooping information option
+
+logging host 192.168.4.3
+logging trap debugging
+service timestamps log datetime msec 
+
+int r fa0/1, fa1/1, fa2/1
+spanning-tree portfast
+spanning-tree bpduguard enable
+
+_______________________________________________servers switch_______________________________________________
+enable
+conf t
+hostname ser_sw
+
+line con 0
+logging synchro
+no exec-timeout 
+exit
+
+line vty 0 15
+logging synchro
+no exec-timeout 
+exit
+
+
+int r fa0/1-5
+switchport mode trunk
+switchport port-security
+switchport port-security max 1
+switchport port-security mac-address sticky
+switchport port-security violation shutdown
+exit
+
+int r fa0/1-24
+spanning-tree portfast
+spanning-tree bpduguard enable
+exit
+
+_______________________________________________HQ_R1_______________________________________________
+enable
+conf t
+hostname HQ_R1
+enable secret cisco
+
+service password-encryption
+banner motd ^
+******************************************
+UNATHOURIZED ACCESS IS BROHIBITED
+******************************************
+^
+line con 0
+pass cisco
+login local
+logging synchro
+no exec-timeout 
+exit
+
+ip domain-name admin.com
+username admin secret cisco
+crypto key generate rsa general-keys modulus 2024
+ip ssh version 2
+
+line vty 0 15
+login local
+logging synchro
+no exec-timeout 
+transport input ssh
+exit
+
+int gi0/0
+no sh
+ip address 192.168.3.1 255.255.255.252
+ip helper-address 192.168.4.2
+
+int gi0/1
+no sh
+ip address 192.168.3.5 255.255.255.252
+ip helper-address 192.168.4.2
+
+int gi0/0
+no sh
+ip address 192.168.3.9 255.255.255.252
+
+ip routing
+router ospf 1
+router-id 4.4.4.4
+network 192.168.3.0 0.0.0.3 a 0
+network 192.168.3.4 0.0.0.3 a 0
+network 192.168.3.8 0.0.0.3 a 0
+network 192.168.4.0 0.0.0.255 a 0
+exit
+
+int r gi0/0-1
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 cisco
+exit
+
+int se0/1/0
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 cisco
+exit
+
+logging host 192.168.4.3
+logging trap debugging
+service timestamps log datetime msec 
+
+ntp server 192.168.4.5
+
+
+license boot module c2900 technology-package securityk9 
+access-list 150 permit ip 192.168.0.0 0.0.0.255 192.168.1.0 0.0.0.255
+
+crypto isakmp policy 10
+encryption aes 256
+authentication pre-share 
+group 5
+exit
+
+crypto isakmp key secretcisco address 192.168.3.10
+crypto ipsec transform-set HQ_R1-BR_R1 esp-aes 256 esp-sha-hmac
+
+crypto map IPSEC-MAP 10 ipsec-isakmp 
+set peer 192.168.3.10
+set pfs group5
+set security-association lifetime seconds 86400
+set transform-set HQ_R1-BR_R1
+match address 150
+exit
+
+int se0/1/0
+crypto map IPSEC-MAP
+ex
+do wr
+
+_______________________________________________branch layer 3 sw1_______________________________________________
+enable
+conf t
+hostname BR_sw1
+enable secret cisco
+
+service password-encryption
+banner motd ^
+******************************************
+UNATHOURIZED ACCESS IS BROHIBITED
+******************************************
+^
+
+line con 0
+pass cisco
+login local
+logging synchro
+no exec-timeout 
+exit
+
+ip domain-name admin.com
+username admin secret cisco
+crypto key generate rsa general-keys modulus 2024
+ip ssh version 2
+
+line vty 0 15
+login local
+logging synchro
+no exec-timeout 
+transport input ssh
+exit
+
+vlan 60
+name first_floor
+vlan 70
+name second_floor
+vlan 80
+name third_floor
+vlan 90
+name voice_vlan
+exit
+
+int vlan 60
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.1.1 255.255.255.192
+exit
+
+int vlan 70
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.1.65 255.255.255.192
+exit
+
+int vlan 80
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.1.129 255.255.255.192
+exit
+
+int vlan 90
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.1.193 255.255.255.192
+exit
+
+spanning-tree mode rapid-pvst 
+spanning-tree vlan 60 root primary 
+spanning-tree vlan 70 root primary 
+spanning-tree vlan 80 root primary 
+spanning-tree vlan 90 root primary 
+
+int r fa0/4-6
+channel-group 1 mode active
+channel-protocol lacp
+
+int fa0/7
+no switchport
+ip address 192.168.3.2 255.255.255.252
+
+ip routing
+router ospf 1
+router-id 2.2.2.2
+network 192.168.1.0 0.0.0.63 a 0
+network 192.168.1.64 0.0.0.63 a 0
+network 192.168.1.128 0.0.0.63 a 0
+network 192.168.1.192 0.0.0.63 a 0
+passive-interface fa0/1
+passive-interface fa0/2
+passive-interface fa0/3
+exit
+
+int fa0/7
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 cisco
+exit
+
+logging host 192.168.4.3
+logging trap debugging
+service timestamps log datetime msec 
+
+ntp server 192.168.3.13
+
+
+_______________________________________________Branch layer 3 sw2_______________________________________________
+enable
+conf t
+hostname BR_sw2
+enable secret cisco
+
+service password-encryption
+banner motd ^
+******************************************
+UNATHOURIZED ACCESS IS BROHIBITED
+******************************************
+^
+line con 0
+pass cisco
+login local
+logging synchro
+no exec-timeout 
+exit
+
+ip domain-name admin.com
+username admin secret cisco
+crypto key generate rsa general-keys modulus 2024
+ip ssh version 2
+
+line vty 0 15
+login local
+logging synchro
+no exec-timeout 
+transport input ssh
+exit
+
+vlan 60
+name first_floor
+vlan 70
+name second_floor
+vlan 80
+name third_floor
+vlan 90
+name voice_vlan
+exit
+
+int vlan 60
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.1.1 255.255.255.192
+exit
+
+int vlan 70
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.1.65 255.255.255.192
+exit
+
+int vlan 80
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.1.129 255.255.255.192
+exit
+
+int vlan 90
+no sh
+ip helper-address 192.168.4.2
+ip address 192.168.1.193 255.255.255.192
+exit
+
+spanning-tree mode rapid-pvst 
+
+int r fa0/4-6
+channel-group 1 mode passive
+channel-protocol lacp
+
+int fa0/7
+no switchport
+ip address 192.168.3.2 255.255.255.252
+
+ip routing
+router ospf 1
+router-id 1.1.1.1
+network 192.168.1.0 0.0.0.63 a 0
+network 192.168.1.64 0.0.0.63 a 0
+network 192.168.1.128 0.0.0.63 a 0
+network 192.168.1.192 0.0.0.63 a 0
+passive-interface fa0/1
+passive-interface fa0/2
+passive-interface fa0/3
+exit
+
+int fa0/7
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 cisco
+exit
+
+logging host 192.168.4.3
+logging trap debugging
+service timestamps log datetime msec 
+
+ntp server 192.168.3.17
+
+_______________________________________________Branch layer 3 sw3_______________________________________________
+enable
+conf t
+hostname BR_sw3
+
+line con 0
+logging synchro
+no exec-timeout 
+exit
+
+line vty 0 15
+logging synchro
+no exec-timeout 
+exit
+
+vlan 60
+name first_floor
+vlan 90
+name voice_vlan
+exit
+
+int r fa0/4-5
+no sh
+switchport trunk encapsulation dot1q 
+switchport mode trunk
+exit
+
+int fa0/1
+no sh
+switchport mode access
+switchport access vlan 60
+switchport voice vlan 90
+exit
+
+int r fa0/2-3
+no sh
+switchport mode access
+switchport access vlan 60
+exit
+
+int fa0/1
+switchport port-security 
+switchport port-security mac-address sticky 
+switchport port-security maximum 2
+switchport port-security violation restrict 
+exit
+
+int r fa0/2-3
+switchport port-security 
+switchport port-security mac-address sticky 
+switchport port-security maximum 1
+switchport port-security violation restrict 
+exit
+
+ip dhcp snooping 
+ip dhcp snooping vlan 60
+ip dhcp snooping vlan 90
+ip arp inspection vlan 60
+ip arp inspection vlan 90
+ip arp inspection validate src-mac ip dst-mac
+int r fa0/4-5
+ip dhcp snooping trust
+ip arp inspection trust
+exit
+int r fa0/1-3
+ip dhcp snooping limit rate 3
+exit
+no ip dhcp snooping information option
+
+logging host 192.168.4.3
+logging trap debugging
+service timestamps log datetime msec 
+
+int r fa0/1-3
+spanning-tree portfast
+spanning-tree bpduguard enable
+
+_______________________________________________branch layer 2 sw1_______________________________________________
+enable
+conf t
+hostname BR_l2sw1
+
+line con 0
+logging synchro
+no exec-timeout 
+exit
+
+line vty 0 15
+logging synchro
+no exec-timeout 
+exit
+
+vlan 70
+name second_floor
+exit
+
+int r fa3/1, fa6/1
+switchport mode trunk
+exit
+
+int r fa0/1, fa1/1, fa2/1
+switchport mode access
+switchport access vlan 70
+exit
+
+int r fa0/1, fa1/1, fa2/1
+switchport port-security 
+switchport port-security mac-address sticky 
+switchport port-security maximum 1
+switchport port-security violation restrict 
+exit
+
+ip dhcp snooping 
+ip dhcp snooping vlan 70
+ip arp inspection vlan 70
+ip arp inspection validate src-mac ip dst-mac
+int r fa3/1 ,fa6/1
+ip dhcp snooping trust
+ip arp inspection trust
+exit
+int r fa0/1, fa1/1, fa2/1
+ip dhcp snooping limit rate 3
+exit
+no ip dhcp snooping information option
+
+logging host 192.168.4.3
+logging trap debugging
+service timestamps log datetime msec 
+
+int r fa0/1, fa1/1, fa2/1
+spanning-tree portfast
+spanning-tree bpduguard enable
+
+_______________________________________________branch layer 2 sw2_______________________________________________
+enable
+conf t
+hostname BR_l2sw2
+
+line con 0
+logging synchro
+no exec-timeout 
+exit
+
+line vty 0 15
+logging synchro
+no exec-timeout 
+exit
+
+vlan 80
+name third_floor
+exit
+
+int r fa3/1, fa8/1
+switchport mode trunk
+exit
+
+int r fa0/1, fa1/1, fa2/1
+switchport mode access
+switchport access vlan 80
+exit
+
+int r fa0/1, fa1/1, fa2/1
+switchport port-security 
+switchport port-security mac-address sticky 
+switchport port-security maximum 1
+switchport port-security violation restrict 
+exit
+
+ip dhcp snooping 
+ip dhcp snooping vlan 80
+ip arp inspection vlan 80
+ip arp inspection validate src-mac ip dst-mac
+int r fa3/1 ,fa8/1
+ip dhcp snooping trust
+ip arp inspection trust
+exit
+int r fa0/1, fa1/1, fa2/1
+ip dhcp snooping limit rate 3
+exit
+no ip dhcp snooping information option
+
+logging host 192.168.4.3
+logging trap debugging
+service timestamps log datetime msec 
+
+int r fa1/1, fa2/1, fa3/1
+spanning-tree portfast
+spanning-tree bpduguard enable
+
+
+_______________________________________________Branch_R1_______________________________________________
+enable
+conf t
+hostname BR_R1
+enable secret cisco
+
+service password-encryption
+banner motd ^
+******************************************
+UNATHOURIZED ACCESS IS BROHIBITED
+******************************************
+^
+line con 0
+pass cisco
+login local
+logging synchro
+no exec-timeout 
+exit
+
+ip domain-name admin.com
+username admin secret cisco
+crypto key generate rsa general-keys modulus 2024
+ip ssh version 2
+
+line vty 0 15
+login local
+logging synchro
+no exec-timeout 
+transport input ssh
+exit
+
+int gi0/0
+no sh
+ip address 192.168.3.13 255.255.255.252
+no ip helper-address 192.168.3.10
+ip helper-address 192.168.4.2
+
+int gi0/1
+no sh
+ip address 192.168.3.17 255.255.255.252
+no ip helper-address 192.168.3.10
+ip helper-address 192.168.4.2
+
+ip routing
+router ospf 1
+router-id 3.3.3.3
+network 192.168.3.12 0.0.0.3 a 0
+network 192.168.3.16 0.0.0.3 a 0
+network 192.168.3.8 0.0.0.3 a 0
+exit
+
+int r gi0/0-1
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 cisco
+exit
+
+int se0/1/0
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 cisco
+exit
+
+logging host 192.168.4.3
+logging trap debugging
+service timestamps log datetime msec 
+
+ntp server 192.168.3.9
+
+license boot module c2900 technology-package securityk9 
+access-list 150 permit ip 192.168.1.0 0.0.0.255 192.168.0.0 0.0.0.255
+
+crypto isakmp policy 10
+encryption aes 256
+authentication pre-share 
+group 5
+exit
+
+crypto isakmp key secretcisco address 192.168.3.9
+crypto ipsec transform-set BR_R1-HQ_R1 esp-aes 256 esp-sha-hmac
+
+crypto map IPSEC-MAP 10 ipsec-isakmp 
+set peer 192.168.3.9
+set pfs group5
+set security-association lifetime seconds 86400
+set transform-set BR_R1-HQ_R1
+match address 150
+exit
+
+int se0/1/0
+crypto map IPSEC-MAP
+ex
+do wr
